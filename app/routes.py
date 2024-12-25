@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, jsonify
-from .sparql_utils import execute_sparql_query
+from controllers.sparql_utils import execute_sparql_query
 
 main = Blueprint('main', __name__)
 
