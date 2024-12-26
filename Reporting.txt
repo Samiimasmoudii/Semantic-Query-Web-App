@@ -1,4 +1,5 @@
 Database : DBpedia
+https://sparql.dev/article/SPARQL_query_examples_for_querying_DBpedia.html
 
 semantic-web-app/
 │
