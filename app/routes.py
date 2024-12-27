@@ -18,7 +18,10 @@ def query():
     if "error" in results:
         return jsonify({"error": results["error"]}), 400
 
-    return jsonify({"results": results})@main.route('/test', methods=['GET'])
+    return jsonify({"results": results})
+
+# Add newline here
+@main.route('/test', methods=['GET'])
 def test_pipeline():
     """
     Test the pipeline: query Elasticsearch and use the result to query DBpedia.
