@@ -18,8 +18,7 @@ def query():
     if "error" in results:
         return jsonify({"error": results["error"]}), 400
 
-    return jsonify({"results": results})
-@main.route('/test', methods=['GET'])
+    return jsonify({"results": results})@main.route('/test', methods=['GET'])
 def test_pipeline():
     """
     Test the pipeline: query Elasticsearch and use the result to query DBpedia.
@@ -29,16 +28,17 @@ def test_pipeline():
         search_term = request.args.get('query', default='Albert Einstein')
         es_results = es_search(search_term)
 
+        if not es_results:
+            return jsonify({"message": "No results found in Elasticsearch."}), 404
+
         # Step 2: Use SPARQL to query DBpedia with the first Elasticsearch result
-        if es_results:
-            sparql_query = es_results[0].get("search_term", search_term)
-            dbpedia_results = execute_sparql_query(sparql_query)
+        sparql_query = es_results[0].get("search_term", search_term)
+        dbpedia_results = execute_sparql_query(sparql_query)
 
-            return jsonify({
-                "elasticsearch_results": es_results,
-                "dbpedia_results": dbpedia_results
-            })
+        return jsonify({
+            "elasticsearch_results": es_results,
+            "dbpedia_results": dbpedia_results
+        })
 
-        return jsonify({"message": "No results found in Elasticsearch."})
     except Exception as e:
-        return jsonify({"error": f"Pipeline testing failed: {e}"}), 500
+        return jsonify({"error": f"Pipeline testing failed: {str(e)}"}), 500

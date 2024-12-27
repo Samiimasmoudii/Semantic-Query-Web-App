@@ -1,19 +1,6 @@
-
+version: '3.8'
 
 services:
-  web:
-    build: .
-    ports:
-      - "5000:5000"
-    environment:
-      - ELASTICSEARCH_URL=http://elasticsearch:9200
-    depends_on:
-      - elasticsearch
-    volumes:
-      - .:/app
-    networks:
-      - app-network
-
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.17.9
     environment:
@@ -24,12 +11,6 @@ services:
       - "9200:9200"
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
-    networks:
-      - app-network
 
 volumes:
   elasticsearch-data:
-
-networks:
-  app-network:
-    driver: bridge

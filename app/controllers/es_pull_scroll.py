@@ -5,7 +5,10 @@ import json
 from ..config import es_host, es_port, es_index, es_doc_type
 
 # Elasticsearch Client
-es_client = Elasticsearch([es_host])
+es_client = Elasticsearch(
+    "http://localhost:9200"
+) 
+
 
 def es_search(keyword):
     """
@@ -60,3 +63,23 @@ def get_request_body(keyword):
         }
     }
     return request_body
+
+def init_es():
+    
+    try:
+        # Create index if it doesn't exist
+        if not es_client.indices.exists(index=es_index):
+            es_client.indices.create(index=es_index)
+            
+            # Add some test data
+            test_data = {
+                "search_term": "Albert Einstein",
+                "query": "SELECT ?person WHERE { ?person rdfs:label 'Albert Einstein'@en }"
+            }
+            
+            es_client.index(index=es_index, document=test_data)
+            es_client.indices.refresh(index=es_index)
+            
+            print("Test data initialized in Elasticsearch")
+    except Exception as e:
+        print(f"Error initializing Elasticsearch: {e}")
