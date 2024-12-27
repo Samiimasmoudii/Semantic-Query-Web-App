@@ -35,7 +35,7 @@ def test_pipeline():
             return jsonify({"message": "No results found in Elasticsearch."}), 404
 
         # Step 2: Use SPARQL to query DBpedia with the first Elasticsearch result
-        sparql_query = es_results[0].get("search_term", search_term)
+        sparql_query = es_results[0].get("query")
         dbpedia_results = execute_sparql_query(sparql_query)
 
         return jsonify({
