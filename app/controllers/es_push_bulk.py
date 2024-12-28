@@ -7,10 +7,13 @@ from ..config import es_host, es_port, es_index, es_doc_type
 
 # Elasticsearch Configuration Constants
 es_bulk_index_flag = 1000
-es_client = Elasticsearch([es_host], port=es_port)
+es_client = Elasticsearch(
+    "http://localhost:9200"
+) 
+
 
 # Paths for Files
-sparql_queries_path = "sparql_queries.txt"  # File containing SPARQL queries
+sparql_queries_path = "app\static\sparql_queries.txt"  # File containing SPARQL queries
 es_mapping_path = "app/static/es_mapping.json"
 
 try:

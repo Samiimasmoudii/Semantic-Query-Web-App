@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Semantic Web App</title>
+    <title>SPARQL Query Assistant</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <h1>Semantic Web App</h1>
-    <form id="sparql-form">
-        <textarea id="sparql-query" name="sparql_query" rows="8" placeholder="Enter your SPARQL query here..."></textarea>
-        <button type="submit">Execute Query</button>
-    </form>
+    <h1>SPARQL Query Assistant</h1>
+    <div class="query-container">
+        <textarea id="sparql-query" name="sparql_query" rows="8" placeholder="Start typing your SPARQL query..."></textarea>
+        <div id="suggestions" class="suggestions"></div>
+        <button type="button" id="execute-btn">Execute Query</button>
+    </div>
     <div id="results"></div>
     <script src="/static/app.js"></script>
 </body>

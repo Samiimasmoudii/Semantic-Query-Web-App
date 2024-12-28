@@ -1,28 +1,79 @@
-document.getElementById("sparql-form").addEventListener("submit", async function (event) {
-    event.preventDefault();
-    const query = document.getElementById("sparql-query").value;
-    const resultsDiv = document.getElementById("results");
+document.addEventListener('DOMContentLoaded', function() {
+    const queryTextarea = document.getElementById('sparql-query');
+    const suggestionsDiv = document.getElementById('suggestions');
+    const executeBtn = document.getElementById('execute-btn');
+    let typingTimer;
 
-    resultsDiv.innerHTML = "Executing query...";
-    try {
-        const response = await fetch("/query", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded"
-            },
-            body: new URLSearchParams({ sparql_query: query })
-        });
-        const data = await response.json();
-        if (data.error) {
-            resultsDiv.innerHTML = `<p>Error: ${data.error}</p>`;
-        } else {
-            resultsDiv.innerHTML = formatResults(data.results);
+    // Handle input in textarea
+    queryTextarea.addEventListener('input', function() {
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(() => getSuggestions(this.value), 300); // Debounce
+    });
+
+    // Get suggestions from Elasticsearch
+    async function getSuggestions(text) {
+        if (!text.trim()) {
+            suggestionsDiv.innerHTML = '';
+            return;
         }
-    } catch (err) {
-        resultsDiv.innerHTML = `<p>Error: ${err.message}</p>`;
+
+        try {
+            const response = await fetch(`/test?query=${encodeURIComponent(text)}`);
+            const data = await response.json();
+            
+            if (data.elasticsearch_results && data.elasticsearch_results.length > 0) {
+                displaySuggestions(data.elasticsearch_results);
+            }
+        } catch (error) {
+            console.error('Error getting suggestions:', error);
+        }
     }
+
+    // Display suggestions
+    function displaySuggestions(suggestions) {
+        suggestionsDiv.innerHTML = suggestions
+            .map(suggestion => `
+                <div class="suggestion" onclick="insertSuggestion(${JSON.stringify(suggestion.query)})">
+                    <pre>${suggestion.query}</pre>
+                    <small>Score: ${suggestion.score}</small>
+                </div>
+            `)
+            .join('');
+    }
+
+    // Handle query execution
+    executeBtn.addEventListener('click', async function() {
+        const query = queryTextarea.value;
+        const resultsDiv = document.getElementById('results');
+
+        try {
+            const response = await fetch('/query', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({ sparql_query: query })
+            });
+            const data = await response.json();
+            
+            if (data.error) {
+                resultsDiv.innerHTML = `<p class="error">${data.error}</p>`;
+            } else {
+                resultsDiv.innerHTML = formatResults(data.results);
+            }
+        } catch (error) {
+            resultsDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+        }
+    });
 });
 
+// Helper function to insert suggestion into textarea
+function insertSuggestion(query) {
+    document.getElementById('sparql-query').value = query;
+    document.getElementById('suggestions').innerHTML = '';
+}
+
+// Add back the formatResults function
 function formatResults(results) {
     if (results.length === 0) {
         return "<p>No results found.</p>";
