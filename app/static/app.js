@@ -4,13 +4,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const executeBtn = document.getElementById('execute-btn');
     let typingTimer;
 
-    // Handle input in textarea
     queryTextarea.addEventListener('input', function() {
         clearTimeout(typingTimer);
-        typingTimer = setTimeout(() => getSuggestions(this.value), 300); // Debounce
+        typingTimer = setTimeout(() => getSuggestions(this.value), 300);
     });
 
-    // Get suggestions from Elasticsearch
     async function getSuggestions(text) {
         if (!text.trim()) {
             suggestionsDiv.innerHTML = '';
@@ -29,19 +27,34 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Display suggestions
     function displaySuggestions(suggestions) {
         suggestionsDiv.innerHTML = suggestions
-            .map(suggestion => `
-                <div class="suggestion" onclick="insertSuggestion(${JSON.stringify(suggestion.query)})">
-                    <pre>${suggestion.query}</pre>
-                    <small>Score: ${suggestion.score}</small>
-                </div>
-            `)
+            .map(suggestion => {
+                // Escape the query string for HTML attributes
+                const escapedQuery = suggestion.query
+                    .replace(/&/g, '&amp;')
+                    .replace(/'/g, '&#39;')
+                    .replace(/"/g, '&quot;');
+                
+                return `
+                    <div class="suggestion" data-query="${escapedQuery}">
+                        <pre>${suggestion.query}</pre>
+                        <small>Score: ${suggestion.score}</small>
+                    </div>
+                `;
+            })
             .join('');
+
+        // Add click handlers to suggestions
+        document.querySelectorAll('.suggestion').forEach(suggestionDiv => {
+            suggestionDiv.addEventListener('click', function() {
+                const query = this.getAttribute('data-query');
+                queryTextarea.value = query;
+                suggestionsDiv.innerHTML = '';
+            });
+        });
     }
 
-    // Handle query execution
     executeBtn.addEventListener('click', async function() {
         const query = queryTextarea.value;
         const resultsDiv = document.getElementById('results');
@@ -67,13 +80,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Helper function to insert suggestion into textarea
-function insertSuggestion(query) {
-    document.getElementById('sparql-query').value = query;
-    document.getElementById('suggestions').innerHTML = '';
-}
-
-// Add back the formatResults function
 function formatResults(results) {
     if (results.length === 0) {
         return "<p>No results found.</p>";
