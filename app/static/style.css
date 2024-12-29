@@ -17,3 +17,17 @@ textarea {
     padding: 1rem;
     border-radius: 5px;
 }
+
+/* Customize SPARQL keywords */
+.cm-keyword {
+    color: #007acc;
+    font-weight: bold;
+}
+
+.cm-variable {
+    color: #d73a49;
+}
+
+.cm-atom {
+    color: #008000;
+}
