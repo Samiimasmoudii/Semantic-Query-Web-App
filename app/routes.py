@@ -1,6 +1,7 @@
+import os
 from flask import Blueprint, render_template, request, jsonify
 from app.controllers.es_pull_scroll import es_search
-from .controllers.sparql_utils import execute_sparql_query 
+from .controllers.sparql_utils import execute_sparql_query , save_query
 
 main = Blueprint('main', __name__)
 
@@ -13,12 +14,27 @@ def query():
     query = request.form.get('sparql_query')
     if not query:
         return jsonify({"error": "Query cannot be empty"}), 400
-
+    save_query(query)
     results = execute_sparql_query(query)
     if "error" in results:
         return jsonify({"error": results["error"]}), 400
 
     return jsonify({"results": results})
+@main.route('/previous-queries', methods=['GET'])
+def get_previous_queries():
+    queries = []
+    file_path = os.path.join(os.path.dirname(__file__), 'static', 'sparql_queries.txt')
+    with open(file_path, 'r') as f:
+        lines = f.readlines()
+        start_collecting = False
+        for line in lines:
+            if '#PERSONALIZED USER Query' in line:
+                start_collecting = True
+                continue
+            if start_collecting and line.strip() and not line.strip().startswith('#'):
+                queries.append(line.strip())
+    return jsonify(queries)
+
 
 # Add newline here
 @main.route('/test', methods=['GET'])

@@ -166,3 +166,24 @@ SELECT (COUNT(?city) AS ?cityCount) WHERE {
 SELECT ?label WHERE {
   dbr:Douglas_Adams rdfs:label ?label .
 }
+
+
+
+
+
+
+
+
+
+
+
+#PERSONALIZED USER Query
+
+
+
+
+
+
+# Simple SELECT
+SELECT ?capital WHERE { dbr:Canada dbo:capital ?capital }
+

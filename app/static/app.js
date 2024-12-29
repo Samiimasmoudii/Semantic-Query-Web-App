@@ -136,3 +136,18 @@ document.addEventListener('DOMContentLoaded', function () {
         return table;
     }
 });
+
+document.addEventListener('DOMContentLoaded', async () => {
+  
+ 
+    const response = await fetch('/previous-queries');
+    const queries = await response.json();
+    const previousQueriesDiv = document.getElementById('previous-queries');
+    queries.forEach(query => {
+        const queryElement = document.createElement('a');
+        queryElement.href = '#';
+        queryElement.className = 'list-group-item list-group-item-action';
+        queryElement.textContent = query;
+        previousQueriesDiv.appendChild(queryElement);
+    });
+});
