@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     queryTextarea.addEventListener('input', function() {
         clearTimeout(typingTimer);
-        typingTimer = setTimeout(() => getSuggestions(this.value), 300);
+        typingTimer = setTimeout(() => getSuggestions(this.value), 100);
     });
 
     async function getSuggestions(text) {

@@ -1,38 +1,19 @@
-.query-container {
-    position: relative;
-    width: 80%;
-    margin: 20px auto;
+body {
+    background-color: #f8f9fa;
+    font-family: Arial, sans-serif;
+}
+
+textarea {
+    resize: none;
 }
 
 .suggestions {
-    position: absolute;
-    width: 100%;
-    max-height: 200px;
-    overflow-y: auto;
-    background: white;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    z-index: 1000;
+    color: #6c757d;
+    font-size: 0.9rem;
 }
 
-.suggestion {
-    padding: 8px;
-    cursor: pointer;
-    border-bottom: 1px solid #eee;
-}
-
-.suggestion:hover {
-    background-color: #f5f5f5;
-}
-
-.suggestion pre {
-    margin: 0;
-    white-space: pre-wrap;
-    font-size: 0.9em;
-}
-
-.suggestion small {
-    color: #666;
-    font-size: 0.8em;
+#results pre {
+    background: #e9ecef;
+    padding: 1rem;
+    border-radius: 5px;
 }

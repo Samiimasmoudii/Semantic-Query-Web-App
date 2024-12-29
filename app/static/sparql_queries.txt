@@ -1,510 +1,168 @@
-# 1. Simple SELECT queries
-SELECT ?label WHERE { wd:Q42 rdfs:label ?label FILTER(LANG(?label) = "en") }
-SELECT ?capital WHERE { wd:Q30 wdt:P36 ?capital }
-SELECT ?birthDate WHERE { wd:Q937 wdt:P569 ?birthDate }
+# PREFIX declarations for DBpedia
+PREFIX dbo: <http://dbpedia.org/ontology/>
+PREFIX dbp: <http://dbpedia.org/property/>
+PREFIX dbr: <http://dbpedia.org/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
-# 2. Queries using OPTIONAL
+# Simple SELECT
+SELECT ?label WHERE { dbr:Douglas_Adams rdfs:label ?label FILTER(LANG(?label) = "en") }
+
+# Simple SELECT
+SELECT ?capital WHERE { dbr:United_States dbo:capital ?capital }
+
+# Simple SELECT
+SELECT ?birthDate WHERE { dbr:Albert_Einstein dbo:birthDate ?birthDate }
+
+# Queries using OPTIONAL
 SELECT ?person ?birthPlace WHERE {
-  ?person wdt:P31 wd:Q5 .
-  ?person wdt:P19 ?birthPlace .
-  OPTIONAL { ?person wdt:P569 ?birthDate }
+  ?person a dbo:Person .
+  ?person dbo:birthPlace ?birthPlace .
+  OPTIONAL { ?person dbo:birthDate ?birthDate }
 }
 
-# 3. Queries with FILTER
+# Queries with FILTER
 SELECT ?city WHERE {
-  ?city wdt:P31 wd:Q515 .
-  FILTER(STRSTARTS(STR(?city), "http://www.wikidata.org/entity/Q"))
+  ?city a dbo:City .
+  FILTER(STRSTARTS(STR(?city), "http://dbpedia.org/resource/"))
 }
 
-# 4. Queries using LIMIT
+# Queries using LIMIT
 SELECT ?country ?population WHERE {
-  ?country wdt:P31 wd:Q6256 ;
-           wdt:P1082 ?population .
+  ?country a dbo:Country ;
+           dbo:populationTotal ?population .
 } LIMIT 10
 
-# 5. Queries with ORDER BY
+# Queries with ORDER BY
 SELECT ?city ?population WHERE {
-  ?city wdt:P31 wd:Q515 ;
-        wdt:P1082 ?population .
+  ?city a dbo:City ;
+        dbo:populationTotal ?population .
 } ORDER BY DESC(?population)
 
-# 6. Complex queries with UNION
+# Complex queries with UNION
 SELECT ?person WHERE {
-  { ?person wdt:P31 wd:Q5 ; wdt:P106 wd:Q33999 . }
+  { ?person a dbo:Person ; dbo:occupation dbr:Writer . }
   UNION
-  { ?person wdt:P31 wd:Q5 ; wdt:P106 wd:Q36180 . }
+  { ?person a dbo:Person ; dbo:occupation dbr:Scientist . }
 }
 
-# 7. Queries with aggregates
+# Queries with aggregates
 SELECT (COUNT(?city) AS ?cityCount) WHERE {
-  ?city wdt:P31 wd:Q515 .
+  ?city a dbo:City .
 }
 
-# 8. Queries using DISTINCT
+# Queries using DISTINCT
 SELECT DISTINCT ?occupation WHERE {
-  ?person wdt:P31 wd:Q5 ;
-          wdt:P106 ?occupation .
+  ?person a dbo:Person ;
+          dbo:occupation ?occupation .
 }
 
-# 9. Queries with BIND
+# Queries with BIND
 SELECT ?person ?birthYear WHERE {
-  ?person wdt:P31 wd:Q5 ;
-          wdt:P569 ?birthDate .
+  ?person a dbo:Person ;
+          dbo:birthDate ?birthDate .
   BIND(YEAR(?birthDate) AS ?birthYear)
 }
 
-# 10. Queries using SERVICE
-SELECT ?country ?label WHERE {
-  ?country wdt:P31 wd:Q6256 .
-  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
-}
-# 11. Queries with FILTER and REGEX
+# Queries with FILTER and REGEX
 SELECT ?person WHERE {
-  ?person wdt:P31 wd:Q5 ;
+  ?person a dbo:Person ;
           rdfs:label ?label .
   FILTER(REGEX(?label, "^John", "i"))
 }
 
-# 12. Queries with MINUS
+# Queries with MINUS
 SELECT ?person WHERE {
-  ?person wdt:P31 wd:Q5 ;
-          wdt:P106 wd:Q36180 .
-  MINUS { ?person wdt:P21 wd:Q6581097 . }  # Exclude males
+  ?person a dbo:Person ;
+          dbo:occupation dbr:Scientist .
+  MINUS { ?person dbo:gender dbr:Male . }
 }
 
-# 13. Queries using VALUES
+# Queries using VALUES
 SELECT ?country WHERE {
-  VALUES ?country { wd:Q30 wd:Q145 wd:Q183 }
-  ?country wdt:P31 wd:Q6256 .
+  VALUES ?country { dbr:United_States dbr:France dbr:Germany }
+  ?country a dbo:Country .
 }
 
-# 14. Nested SELECT query
-SELECT ?person ?birthPlace WHERE {
-  ?person wdt:P31 wd:Q5 ;
-          wdt:P19 ?birthPlace .
-  FILTER EXISTS {
-    SELECT ?person WHERE { ?person wdt:P569 ?birthDate . }
-  }
-}
-
-# 15. Queries with GROUP BY
+# Queries with GROUP BY
 SELECT ?birthPlace (COUNT(?person) AS ?personCount) WHERE {
-  ?person wdt:P19 ?birthPlace .
+  ?person dbo:birthPlace ?birthPlace .
 } GROUP BY ?birthPlace
 
-# 16. Queries with HAVING
+# Queries with HAVING
 SELECT ?birthPlace (COUNT(?person) AS ?personCount) WHERE {
-  ?person wdt:P19 ?birthPlace .
+  ?person dbo:birthPlace ?birthPlace .
 } GROUP BY ?birthPlace
 HAVING (?personCount > 10)
 
-# 17. Queries with SUBSTR
+# Queries with SUBSTR
 SELECT ?label (SUBSTR(?label, 1, 10) AS ?shortLabel) WHERE {
-  wd:Q42 rdfs:label ?label .
+  dbr:Douglas_Adams rdfs:label ?label .
   FILTER(LANG(?label) = "en")
 }
 
-# 18. Queries with STRLEN
+# Queries with STRLEN
 SELECT ?person WHERE {
   ?person rdfs:label ?label .
   FILTER(STRLEN(?label) > 15)
 }
 
-# 19. Queries with COALESCE
+# Queries with COALESCE
 SELECT ?birthPlace (COALESCE(?name, "Unknown") AS ?nameLabel) WHERE {
-  ?person wdt:P19 ?birthPlace .
+  ?person dbo:birthPlace ?birthPlace .
   OPTIONAL { ?person rdfs:label ?name . }
 }
 
-# 20. Queries using path expressions
+# Queries using path expressions
 SELECT ?person WHERE {
-  ?person wdt:P31/wdt:P279* wd:Q5 .
+  ?person dbo:birthPlace/dbo:Country dbr:United_States .
 }
 
-# 21. Queries with DESCRIBE
+# Queries with DESCRIBE
 DESCRIBE ?person WHERE {
-  ?person wdt:P31 wd:Q5 ;
-          wdt:P106 wd:Q36180 .
+  ?person a dbo:Person ;
+          dbo:occupation dbr:Scientist .
 }
 
-# 22. Queries with CONSTRUCT
+# Queries with CONSTRUCT
 CONSTRUCT {
   ?person rdfs:label ?label .
 } WHERE {
-  ?person wdt:P31 wd:Q5 ;
+  ?person a dbo:Person ;
           rdfs:label ?label .
 }
 
-# 23. Queries with OPTIONAL and FILTER
-SELECT ?person ?spouse WHERE {
-  ?person wdt:P31 wd:Q5 .
-  OPTIONAL { ?person wdt:P26 ?spouse . }
-  FILTER(BOUND(?spouse))
-}
-
-# 24. Queries with STRDT
-SELECT ?person WHERE {
-  ?person rdfs:label ?label .
-  FILTER(STRDT(?label, xsd:string) = "Albert Einstein")
-}
-
-# 25. UNION with FILTER
-SELECT ?person WHERE {
-  {
-    ?person wdt:P31 wd:Q5 ;
-            wdt:P106 wd:Q33999 .
-  }
-  UNION
-  {
-    ?person wdt:P31 wd:Q5 ;
-            wdt:P106 wd:Q36180 .
-    FILTER NOT EXISTS { ?person wdt:P21 wd:Q6581097 . }
-  }
-}
-# 26. Queries with LANG
+# Queries with LANG
 SELECT ?label WHERE {
-  wd:Q42 rdfs:label ?label .
+  dbr:Douglas_Adams rdfs:label ?label .
   FILTER(LANG(?label) = "fr")
 }
 
-# 27. Queries with PREFIX
-PREFIX wd: <http://www.wikidata.org/entity/>
-PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+# Queries with PREFIX and LIMIT
 SELECT ?capital WHERE {
-  wd:Q30 wdt:P36 ?capital .
-}
+  dbr:United_States dbo:capital ?capital .
+} LIMIT 10
 
-# 28. Multi-condition FILTER
+# Multi-condition FILTER
 SELECT ?city WHERE {
-  ?city wdt:P31 wd:Q515 ;
-        wdt:P1082 ?population .
+  ?city a dbo:City ;
+        dbo:populationTotal ?population .
   FILTER(?population > 1000000 && ?population < 5000000)
 }
 
-# 29. FILTER with regex
-SELECT ?person WHERE {
-  ?person wdt:P31 wd:Q5 ;
-          rdfs:label ?label .
-  FILTER(REGEX(?label, "^(A|B)", "i"))
-}
-
-# 30. OPTIONAL + FILTER on optional
-SELECT ?person ?birthPlace WHERE {
-  ?person wdt:P31 wd:Q5 .
-  OPTIONAL { ?person wdt:P19 ?birthPlace . }
-  FILTER(BOUND(?birthPlace))
-}
-
-# 31. USING paths to entities
-SELECT ?country WHERE {
-  wd:Q42 ^wdt:P27 ?country .
-}
-
-# 32. Use of MIN/MAX
+# Using MAX
 SELECT (MAX(?population) AS ?maxPopulation) WHERE {
-  ?city wdt:P31 wd:Q515 ;
-        wdt:P1082 ?population .
+  ?city a dbo:City ;
+        dbo:populationTotal ?population .
 }
 
-# 33. Nested UNION and FILTER
-SELECT ?country WHERE {
-  {
-    ?country wdt:P31 wd:Q6256 .
-    FILTER(EXISTS { ?country wdt:P297 ?isoCode })
-  }
-  UNION
-  {
-    ?country wdt:P31 wd:Q3624078 .
-  }
-}
-
-# 34. FILTER on numeric ranges
-SELECT ?city WHERE {
-  ?city wdt:P31 wd:Q515 ;
-        wdt:P1082 ?population .
-  FILTER(?population > 1000000 && ?population <= 3000000)
-}
-
-# 35. Combining OPTIONAL with aggregates
+# Combining OPTIONAL with aggregates
 SELECT (COUNT(?city) AS ?cityCount) WHERE {
-  ?city wdt:P31 wd:Q515 .
-  OPTIONAL { ?city wdt:P1082 ?population }
+  ?city a dbo:City .
+  OPTIONAL { ?city dbo:populationTotal ?population }
 }
 
-# 36-50 follow similar patterns using advanced techniques like property paths, regex, and analytics with multiple conditions.
-# 51. Retrieve all classes of entities
-SELECT DISTINCT ?class WHERE {
-  ?entity a ?class .
-}
-
-# 52. Retrieve all properties used in a dataset
-SELECT DISTINCT ?property WHERE {
-  ?subject ?property ?object .
-}
-
-# 53. Retrieve all labels of an entity
+# Retrieve all labels of an entity
 SELECT ?label WHERE {
-  wd:Q42 rdfs:label ?label .
-}
-
-# 54. Retrieve all entities with a specific property
-SELECT ?entity WHERE {
-  ?entity wdt:P31 wd:Q5 .
-}
-
-# 55. Retrieve all properties of a specific entity
-SELECT DISTINCT ?property WHERE {
-  wd:Q42 ?property ?value .
-}
-
-# 56. Retrieve all values of a specific property for an entity
-SELECT ?value WHERE {
-  wd:Q42 wdt:P69 ?value .
-}
-
-# 57. Retrieve all entities linked to a specific one
-SELECT ?linkedEntity WHERE {
-  wd:Q42 ?property ?linkedEntity .
-}
-
-# 58. Retrieve all entities with a specific label
-SELECT ?entity WHERE {
-  ?entity rdfs:label "Albert Einstein"@en .
-}
-
-# 59. Retrieve all entities of a specific class with a label
-SELECT ?entity WHERE {
-  ?entity wdt:P31 wd:Q5 ;
-          rdfs:label ?label .
-}
-
-# 60. Retrieve labels for all subclasses of a specific class
-SELECT ?subclassLabel WHERE {
-  ?subclass wdt:P279 wd:Q5 ;
-            rdfs:label ?subclassLabel .
-}
-
-# 61. Retrieve entities with a numeric property within a range
-SELECT ?city WHERE {
-  ?city wdt:P31 wd:Q515 ;
-        wdt:P1082 ?population .
-  FILTER(?population > 500000)
-}
-
-# 62. Retrieve all entities with an optional label
-SELECT ?entity ?label WHERE {
-  ?entity wdt:P31 wd:Q5 .
-  OPTIONAL { ?entity rdfs:label ?label . }
-}
-
-# 63. Retrieve entities linked by multiple properties
-SELECT ?entity WHERE {
-  ?entity wdt:P31 wd:Q5 ;
-          wdt:P21 wd:Q6581072 .
-}
-
-# 64. Retrieve entities with no specific property
-SELECT ?entity WHERE {
-  ?entity wdt:P31 wd:Q5 .
-  MINUS { ?entity wdt:P106 wd:Q36180 . }
-}
-
-# 65. Retrieve entities with specific language labels
-SELECT ?entity ?label WHERE {
-  ?entity rdfs:label ?label .
-  FILTER(LANG(?label) = "fr")
-}
-
-# 66. Retrieve the count of entities of a specific type
-SELECT (COUNT(?entity) AS ?count) WHERE {
-  ?entity wdt:P31 wd:Q5 .
-}
-
-# 67. Retrieve all entities that are subclasses of a specific class
-SELECT ?subclass WHERE {
-  ?subclass wdt:P279 wd:Q5 .
-}
-
-# 68. Retrieve entities with specific property values
-SELECT ?person WHERE {
-  ?person wdt:P31 wd:Q5 ;
-          wdt:P106 wd:Q937857 .
-}
-
-# 69. Retrieve the most populated cities
-SELECT ?city ?population WHERE {
-  ?city wdt:P31 wd:Q515 ;
-        wdt:P1082 ?population .
-} ORDER BY DESC(?population)
-
-# 70. Retrieve entities with a property and sort alphabetically
-SELECT ?label WHERE {
-  ?entity wdt:P31 wd:Q5 ;
-          rdfs:label ?label .
-} ORDER BY ASC(?label)
-
-# 71. Retrieve all siblings of an entity (same parent)
-SELECT ?sibling WHERE {
-  wd:Q42 wdt:P3373 ?parent .
-  ?sibling wdt:P3373 ?parent .
-  FILTER(?sibling != wd:Q42)
-}
-
-# 72. Retrieve all parents of an entity
-SELECT ?parent WHERE {
-  wd:Q42 wdt:P3373 ?parent .
-}
-
-# 73. Retrieve all children of an entity
-SELECT ?child WHERE {
-  ?child wdt:P3373 wd:Q42 .
-}
-
-# 74. Retrieve entities by geographic location
-SELECT ?place WHERE {
-  ?place wdt:P625 ?location .
-}
-
-# 75. Retrieve entities with specific coordinates
-SELECT ?place WHERE {
-  ?place wdt:P625 "Point(48.8566 2.3522)"^^geo:wktLiteral .
-}
-
-# 76. Retrieve entities with multiple labels
-SELECT ?entity WHERE {
-  ?entity rdfs:label ?label1, ?label2 .
-  FILTER(?label1 != ?label2)
-}
-
-# 77. Retrieve all properties with a specific value
-SELECT ?property WHERE {
-  wd:Q42 ?property wd:Q937857 .
-}
-
-# 78. Retrieve all subjects with a specific object
-SELECT ?subject WHERE {
-  ?subject ?property wd:Q42 .
-}
-
-# 79. Retrieve all objects with a specific subject
-SELECT ?object WHERE {
-  wd:Q42 ?property ?object .
-}
-
-# 80. Retrieve all predicates for a specific subject and object
-SELECT ?predicate WHERE {
-  wd:Q42 ?predicate wd:Q937857 .
-}
-
-# 81. Retrieve entities with a label containing a substring
-SELECT ?entity WHERE {
-  ?entity rdfs:label ?label .
-  FILTER(CONTAINS(?label, "Einstein"))
-}
-
-# 82. Retrieve entities linked through a property path
-SELECT ?person WHERE {
-  wd:Q42 ^wdt:P106/wdt:P31 wd:Q5 .
-}
-
-# 83. Retrieve entities with specific types and properties
-SELECT ?entity WHERE {
-  ?entity wdt:P31 wd:Q5 ;
-          wdt:P106 wd:Q36180 ;
-          wdt:P21 wd:Q6581072 .
-}
-
-# 84. Retrieve entities using only a wildcard
-SELECT ?entity WHERE {
-  ?entity ?property ?value .
-}
-
-# 85. Retrieve the top 5 most populated cities
-SELECT ?city ?population WHERE {
-  ?city wdt:P31 wd:Q515 ;
-        wdt:P1082 ?population .
-} ORDER BY DESC(?population)
-LIMIT 5
-
-# 86. Retrieve entities with specific types but no specific property
-SELECT ?entity WHERE {
-  ?entity wdt:P31 wd:Q5 .
-  MINUS { ?entity wdt:P106 wd:Q937857 . }
-}
-
-# 87. Retrieve a specific property value for a specific entity
-SELECT ?value WHERE {
-  wd:Q42 wdt:P106 ?value .
-}
-
-# 88. Retrieve the number of entities with a specific property
-SELECT (COUNT(?entity) AS ?count) WHERE {
-  ?entity wdt:P106 wd:Q36180 .
-}
-
-# 89. Retrieve all subclasses and their labels
-SELECT ?subclass ?label WHERE {
-  ?subclass wdt:P279 wd:Q5 ;
-            rdfs:label ?label .
-}
-
-# 90. Retrieve entities with both a type and a specific property value
-SELECT ?entity WHERE {
-  ?entity wdt:P31 wd:Q5 ;
-          wdt:P106 wd:Q937857 .
-}
-
-# 91. Retrieve all languages used for labels
-SELECT DISTINCT (LANG(?label) AS ?language) WHERE {
-  ?entity rdfs:label ?label .
-}
-
-# 92. Retrieve properties of an entity and sort by predicate name
-SELECT ?property WHERE {
-  wd:Q42 ?property ?value .
-} ORDER BY ASC(STR(?property))
-
-# 93. Retrieve all countries and their capitals
-SELECT ?country ?capital WHERE {
-  ?country wdt:P31 wd:Q6256 ;
-           wdt:P36 ?capital .
-}
-
-# 94. Retrieve all cities within a specific country
-SELECT ?city WHERE {
-  ?city wdt:P31 wd:Q515 ;
-        wdt:P17 wd:Q30 .
-}
-
-# 95. Retrieve entities with multiple optional properties
-SELECT ?entity ?prop1 ?prop2 WHERE {
-  ?entity wdt:P31 wd:Q5 .
-  OPTIONAL { ?entity wdt:P106 ?prop1 . }
-  OPTIONAL { ?entity wdt:P69 ?prop2 . }
-}
-
-# 96. Retrieve all authors of books
-SELECT ?author WHERE {
-  ?book wdt:P31 wd:Q571 ;
-        wdt:P50 ?author .
-}
-
-# 97. Retrieve all books by a specific author
-SELECT ?book WHERE {
-  ?book wdt:P50 wd:Q42 .
-}
-
-# 98. Retrieve entities using DISTINCT
-SELECT DISTINCT ?entity WHERE {
-  ?entity wdt:P31 wd:Q5 .
-}
-
-# 99. Retrieve entities sorted by length of their labels
-SELECT ?label WHERE {
-  ?entity rdfs:label ?label .
-} ORDER BY STRLEN(?label)
-
-# 100. Retrieve the number of properties of an entity
-SELECT (COUNT(?property) AS ?propertyCount) WHERE {
-  wd:Q42 ?property ?value .
+  dbr:Douglas_Adams rdfs:label ?label .
 }

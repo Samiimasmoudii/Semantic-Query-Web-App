@@ -4,16 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SPARQL Query Assistant</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <h1>SPARQL Query Assistant</h1>
-    <div class="query-container">
-        <textarea id="sparql-query" name="sparql_query" rows="8" placeholder="Start typing your SPARQL query..."></textarea>
-        <div id="suggestions" class="suggestions"></div>
-        <button type="button" id="execute-btn">Execute Query</button>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">SPARQL Query Assistant</h1>
+        <div class="card shadow">
+            <div class="card-body">
+                <textarea id="sparql-query" name="sparql_query" class="form-control mb-3" rows="6" placeholder="Enter your SPARQL query here..."></textarea>
+                <div id="suggestions" class="suggestions"></div>
+                <button id="execute-btn" class="btn btn-primary w-100">Execute Query</button>
+            </div>
+        </div>
+        <div id="results" class="mt-4"></div>
     </div>
-    <div id="results"></div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
     <script src="/static/app.js"></script>
 </body>
 </html>

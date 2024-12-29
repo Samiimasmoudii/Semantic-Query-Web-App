@@ -22,9 +22,7 @@ try:
 
     # Reading SPARQL Queries
     with open(sparql_queries_path, "r", encoding="utf-8") as queries_file:
-        queries = queries_file.read().split("\n\n")  
-        
-    # Assuming queries are separated by double newline
+        queries = queries_file.read().split("\n\n")  # Assuming queries are separated by double newline
 
     actions = []
 
