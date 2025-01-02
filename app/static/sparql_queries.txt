@@ -187,3 +187,8 @@ SELECT ?label WHERE {
 # Simple SELECT
 SELECT ?capital WHERE { dbr:Canada dbo:capital ?capital }
 
+# Queries with FILTER
+SELECT ?city WHERE {
+  ?city a dbo:City .
+  FILTER(STRSTARTS(STR(?city), "http://dbpedia.org/resource/"))
+}
