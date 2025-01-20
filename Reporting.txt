@@ -67,3 +67,38 @@ Allow exporting queries and results (CSV, JSON).
 Security:
 Prevent SPARQL injection attacks.
 Ensure the app is robust against misuse.
+
+
+
+
+
+
+
+
+Login + Signup
+ 
+Bootstrap Integration:
+
+Use of cdn.jsdelivr.net for Bootstrap ensures your pages are styled and responsive out of the box.
+Semantic HTML:
+
+Proper use of <form>, <label>, and <input> elements enhances accessibility and structure.
+User Guidance:
+
+Clear links between login and signup pages help with navigation.
+Form Validation:
+
+The required attribute ensures basic client-side validation.
+Responsive Design:
+
+Use of Bootstrap classes like container, card, and mt-5 ensures the layout adapts well to various screen sizes.
+password hashing
+
+Use CSRF Token
+
+Client-side password verification
+
+
+
+
+

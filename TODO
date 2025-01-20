@@ -1,0 +1,8 @@
+
+
+Top Queries 
+# Queries with ORDER BY
+SELECT ?city ?population WHERE {
+  ?city a dbo:City ;
+        dbo:populationTotal ?population .
+} ORDER BY DESC(?population)

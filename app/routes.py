@@ -1,13 +1,58 @@
 import os
-from flask import Blueprint, render_template, request, jsonify
+from . import db
+from flask import Blueprint, redirect, render_template, request, jsonify, url_for, session
 from app.controllers.es_pull_scroll import es_search
 from .controllers.sparql_utils import execute_sparql_query , save_query
+from werkzeug.security import generate_password_hash, check_password_hash
+from app.models.user import User
 
 main = Blueprint('main', __name__)
 
 @main.route('/')
 def home():
+    return redirect(url_for('main.login'))
+
+@main.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+
+        user = User.query.filter_by(username=username).first()
+        if user and check_password_hash(user.password, password):
+            session['user'] = user.username
+            return redirect(url_for('main.dashboard'))
+
+        return jsonify({"error": "Invalid username or password"}), 401
+
+    return render_template('login.html')
+
+
+@main.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+
+        if User.query.filter_by(username=username).first():
+            return jsonify({"error": "Username already exists"}), 400
+
+        hashed_password = generate_password_hash(password, method='sha256')
+        new_user = User(username=username, password=hashed_password)
+
+        db.session.add(new_user)
+        db.session.commit()
+
+        return redirect(url_for('main.login'))
+
+    return render_template('signup.html')
+
+@main.route('/dashboard')
+def dashboard():
+    if 'user' not in session:
+        return redirect(url_for('main.login'))
     return render_template('index.html')
+
 
 @main.route('/query', methods=['POST'])
 def query():
@@ -61,3 +106,14 @@ def test_pipeline():
 
     except Exception as e:
         return jsonify({"error": f"Pipeline testing failed: {str(e)}"}), 500
+
+@main.route('/test-db', methods=['GET'])
+def test_db():
+    try:
+        user = User.query.first()
+        if user:
+            return jsonify({"message": f"First user: {user.username}"})
+        else:
+            return jsonify({"message": "No users found in the database."})
+    except Exception as e:
+        return jsonify({"error": f"Database connection failed: {str(e)}"}), 500

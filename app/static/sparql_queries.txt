@@ -192,3 +192,7 @@ SELECT ?city WHERE {
   ?city a dbo:City .
   FILTER(STRSTARTS(STR(?city), "http://dbpedia.org/resource/"))
 }
+# Simple SELECT
+SELECT ?capital WHERE { dbr:United_States dbo:capital ?capital }
+# Simple SELECT
+SELECT ?label WHERE { dbr:Douglas_Adams rdfs:label ?label FILTER(LANG(?label) = "en") }
