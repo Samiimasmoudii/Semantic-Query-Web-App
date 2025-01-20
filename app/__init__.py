@@ -2,6 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
+from .config import Config  # Import your Config class
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -9,9 +10,9 @@ csrf = CSRFProtect()
 
 def create_app():
     app = Flask(__name__)
-    app.config['SECRET_KEY'] = 'your-secret-key'
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://username:password@localhost/users'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    # Load the configuration from Config class
+    app.config.from_object(Config)  # This loads all the configurations from Config
 
     db.init_app(app)
     migrate.init_app(app, db)
