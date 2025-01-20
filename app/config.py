@@ -4,7 +4,7 @@ pymysql.install_as_MySQLdb()
 
 class Config:
         SECRET_KEY = os.environ.get('SECRET_KEY', 'your-secret-key')  # Retrieve SECRET_KEY from environment or use default
-        SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI','mysql://root:newpassword@localhost:5433/users')  # Fixed DB URI for MySQL
+        SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI','mysql://root:newpassword@localhost:3306/users')  # Fixed DB URI for MySQL
         SQLALCHEMY_TRACK_MODIFICATIONS = False
     
 # Elasticsearch configurations

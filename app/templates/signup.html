@@ -15,28 +15,48 @@
         <div class="card shadow">
 
             <div class="card-body">
-                {% block content %}
+                <!-- Form starts here -->
                 <form action="/signup" method="POST">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {{ form.hidden_tag() }} <!-- CSRF token automatically added -->
+                    
+                    <!-- Username -->
                     <div class="mb-3">
                         <label for="username" class="form-label">Username</label>
-                        <input type="text" id="username" name="username" class="form-control" required>
+                        {{ form.username(class="form-control") }}
+                        {% if form.username.errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.username.errors %}
+                            <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
                     </div>
+
+                    <!-- Password -->
                     <div class="mb-3">
                         <label for="password" class="form-label">Password</label>
-                        <input type="password" id="password" name="password" class="form-control" required>
+                        {{ form.password(class="form-control") }}
+                        {% if form.password.errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.password.errors %}
+                            <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
                     </div>
+
+                    <!-- Submit Button -->
                     <button type="submit" class="btn btn-primary w-100">Sign Up</button>
                 </form>
-                
-                
-                {% endblock %}
-
             </div>
         </div>
+
+        <!-- Link to Login Page -->
         <div class="text-center mt-3">
             <p>Already have an account? <a href="/login">Login here</a></p>
         </div>
+
+        <!-- Flash Error Message (if any) -->
         {% if error %}
         <div class="alert alert-danger" role="alert">
             {{ error }}
