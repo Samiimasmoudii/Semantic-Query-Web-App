@@ -16,38 +16,38 @@
 
             <div class="card-body">
                 <!-- Form starts here -->
-                <form action="/signup" method="POST">
-                    {{ form.hidden_tag() }} <!-- CSRF token automatically added -->
-                    
-                    <!-- Username -->
-                    <div class="mb-3">
-                        <label for="username" class="form-label">Username</label>
-                        {{ form.username(class="form-control") }}
-                        {% if form.username.errors %}
-                        <div class="alert alert-danger">
-                            {% for error in form.username.errors %}
-                            <p>{{ error }}</p>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                    </div>
+                    <form action="/signup" method="POST">
+                        {{ form.hidden_tag() }} <!-- CSRF token automatically added -->
 
-                    <!-- Password -->
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
-                        {{ form.password(class="form-control") }}
-                        {% if form.password.errors %}
-                        <div class="alert alert-danger">
-                            {% for error in form.password.errors %}
-                            <p>{{ error }}</p>
-                            {% endfor %}
+                        <!-- Username -->
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            {{ form.username(class="form-control") }}
+                            {% if form.username.errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.username.errors %}
+                                <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
                         </div>
-                        {% endif %}
-                    </div>
 
-                    <!-- Submit Button -->
-                    <button type="submit" class="btn btn-primary w-100">Sign Up</button>
-                </form>
+                        <!-- Password -->
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            {{ form.password(class="form-control") }}
+                            {% if form.password.errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.password.errors %}
+                                <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn btn-primary w-100">Sign Up</button>
+                    </form>
             </div>
         </div>
 
@@ -55,6 +55,15 @@
         <div class="text-center mt-3">
             <p>Already have an account? <a href="/login">Login here</a></p>
         </div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <ul>
+            {% for category, message in messages %}
+            <li class="alert alert-{{ category }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% endwith %}
 
         <!-- Flash Error Message (if any) -->
         {% if error %}

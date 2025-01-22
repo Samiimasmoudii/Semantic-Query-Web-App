@@ -3,3 +3,4 @@ app/__pycache__/
 *.pyc
 pip-log.txt
 controlle/__pycache__
+app/.env

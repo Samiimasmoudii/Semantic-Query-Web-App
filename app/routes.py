@@ -1,6 +1,19 @@
 import os
 
+from flask import render_template, request, redirect, url_for, flash
+from werkzeug.security import generate_password_hash
+from sqlalchemy.orm import Session
 from flask_wtf import FlaskForm
+from .database import SessionLocal  # Import SessionLocal
+
+from flask import render_template, request, redirect, url_for, flash
+from werkzeug.security import generate_password_hash
+from sqlalchemy.orm import Session
+from . import db
+from app.models.user import User
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField
+from wtforms.validators import DataRequired, Length, EqualTo
 from . import db
 from flask import Blueprint, redirect, render_template, request, jsonify, url_for, session
 from app.controllers.es_pull_scroll import es_search
@@ -8,13 +21,14 @@ from .controllers.sparql_utils import execute_sparql_query , save_query
 from wtforms.validators import DataRequired, Length
 from werkzeug.security import generate_password_hash, check_password_hash
 from wtforms import StringField, PasswordField
-from app.models.user import User
-
+from app.database import engine, get_db, Base
 main = Blueprint('main', __name__)
 
 @main.route('/')
 def home():
     return redirect(url_for('main.login'))
+
+
 @main.route('/login', methods=['GET', 'POST'])
 def login():
     class LoginForm(FlaskForm):
@@ -29,9 +43,12 @@ def login():
 
         # Check if the user exists and verify the password
         user = User.query.filter_by(username=username).first()
+
         if user and check_password_hash(user.password, password):
             # Login successful, set session
             session['user'] = user.username
+            session.permanent = True  # Make session permanent
+            flash("Login successful", "success")
             return redirect(url_for('main.dashboard'))
 
         flash("Invalid username or password", "danger")
@@ -39,21 +56,30 @@ def login():
 
     return render_template('login.html', form=form)
 
-from flask import render_template, request, redirect, url_for, flash
-from werkzeug.security import generate_password_hash
-from . import db
-from app.models.user import User
-from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField
-from wtforms.validators import DataRequired, Length, EqualTo
+
+Base.metadata.create_all(bind=engine)
+@main.route('/logout')
+def logout():
+    session.pop('user', None)  # Remove user from session
+    flash("You have been logged out.", "info")
+    return redirect(url_for('main.login'))
+
+
+@main.route('/users', methods=['GET'])
+def get_users():
+    with Session(engine) as session:
+        users = session.query(User).all()
+        return jsonify([{'id': u.id, 'username': u.username} for u in users])
+
+
+    
 
 @main.route('/signup', methods=['GET', 'POST'])
 def signup():
     class SignupForm(FlaskForm):
-        username = StringField('Username', validators=[DataRequired(), Length(min=4, max=20)])
-        password = PasswordField('Password', validators=[DataRequired(), Length(min=6, max=20)])
-        confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
-
+        username = StringField('username', validators=[DataRequired(), Length(min=4, max=20)])
+        password = PasswordField('password', validators=[DataRequired(), Length(min=8, max=20)])
+        
     form = SignupForm()
 
     if form.validate_on_submit():
@@ -61,20 +87,22 @@ def signup():
         password = form.password.data
 
         # Check if the username already exists
-        if User.query.filter_by(username=username).first():
-            flash("Username already exists.", "danger")
-            return redirect(url_for('main.signup'))
+        with SessionLocal() as session:
+            if session.query(User).filter_by(username=username).first():
+                flash("Username already exists.", "danger")
+                return redirect(url_for('main.signup'))
 
-        # Hash the password and create the new user
-        hashed_password = generate_password_hash(password)
-        new_user = User(username=username, password=hashed_password)
-        db.session.add(new_user)
-        db.session.commit()
+            # Hash the password and create the new user
+            hashed_password = generate_password_hash(password)
+            new_user = User(username=username, password=hashed_password)
+            session.add(new_user)
+            session.commit()
 
         flash("Account created successfully. Please login.", "success")
         return redirect(url_for('main.login'))
 
     return render_template('signup.html', form=form)
+
 
 @main.route('/dashboard')
 def dashboard():
