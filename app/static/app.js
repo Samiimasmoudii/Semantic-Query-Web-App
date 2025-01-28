@@ -11,13 +11,10 @@ document.addEventListener('DOMContentLoaded', function () {
         matchBrackets: true,
     });
 
- 
-    console.log("CodeMirror initialized."); // Debug log
+    console.log("CodeMirror initialized.");
 
     // Function to fetch suggestions
     async function getSuggestions(text) {
-        console.log("Fetching suggestions for query:", text); // Debug log
-
         if (!text.trim()) {
             suggestionsDiv.innerHTML = '';
             return;
@@ -27,9 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const response = await fetch(`/test?query=${encodeURIComponent(text)}`);
             const data = await response.json();
 
-            console.log("Suggestions data received:", data); // Debug log
-
-            if (data.elasticsearch_results && data.elasticsearch_results.length > 0) {
+            if (data.elasticsearch_results?.length > 0) {
                 displaySuggestions(data.elasticsearch_results);
             } else {
                 suggestionsDiv.innerHTML = "<p>No suggestions available.</p>";
@@ -41,32 +36,27 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Function to display suggestions
     function displaySuggestions(suggestions) {
-        if (!document.activeElement || document.activeElement !== editor.getInputField()) {
-            return;
-        }
-        console.log("Displaying suggestions:", suggestions); // Debug log
+        if (!document.activeElement || document.activeElement !== editor.getInputField()) return;
 
-        suggestionsDiv.innerHTML = suggestions
-            .map((suggestion) => {
-                const escapedQuery = suggestion.query
-                    .replace(/&/g, '&amp;')
-                    .replace(/'/g, '&#39;')
-                    .replace(/"/g, '&quot;');
+        suggestionsDiv.innerHTML = suggestions.map(suggestion => {
+            const escapedQuery = suggestion.query
+                .replace(/&/g, '&amp;')
+                .replace(/'/g, '&#39;')
+                .replace(/"/g, '&quot;');
 
-                return `
-                    <div class="suggestion" data-query="${escapedQuery}">
-                        <pre>${suggestion.query}</pre>
-                        <small>Score: ${suggestion.score}</small>
-                    </div>
-                `;
-            })
-            .join('');
+            return `
+                <div class="suggestion" data-query="${escapedQuery}">
+                    <pre>${suggestion.query}</pre>
+                    <small>Score: ${suggestion.score}</small>
+                </div>
+            `;
+        }).join('');
 
         // Add click handlers to suggestions
-        document.querySelectorAll('.suggestion').forEach((suggestionDiv) => {
+        document.querySelectorAll('.suggestion').forEach(suggestionDiv => {
             suggestionDiv.addEventListener('click', function () {
                 const query = this.getAttribute('data-query');
-                editor.setValue(query); // Update CodeMirror content with the selected suggestion
+                editor.setValue(query);
                 suggestionsDiv.innerHTML = '';
             });
         });
@@ -76,18 +66,26 @@ document.addEventListener('DOMContentLoaded', function () {
     editor.on('change', function (instance) {
         clearTimeout(typingTimer);
         typingTimer = setTimeout(() => {
-            const query = instance.getValue();
-            console.log("Query change detected:", query); // Debug log
-            getSuggestions(query); // Fetch suggestions for current query
+            getSuggestions(instance.getValue());
         }, 100);
     });
 
     // Execute button logic
+    // In the execute button handler
     executeBtn.addEventListener('click', async function () {
-        const query = editor.getValue(); // Get value from CodeMirror
+        // Get the raw query from the editor
+        const rawQuery = editor.getValue();
         const resultsDiv = document.getElementById('results');
 
-        console.log("Executing query:", query); // Debug log
+        // Add required prefixes
+        const fullQuery = `
+        PREFIX dbo: <http://dbpedia.org/ontology/>
+        PREFIX dbr: <http://dbpedia.org/resource/>
+        PREFIX dbp: <http://dbpedia.org/property/>
+        ${rawQuery}
+    `;
+
+        console.log("Executing query:", fullQuery);
 
         try {
             const response = await fetch('/query', {
@@ -95,59 +93,73 @@ document.addEventListener('DOMContentLoaded', function () {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: new URLSearchParams({ sparql_query: query }),
+                body: new URLSearchParams({ sparql_query: fullQuery }),
             });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
             const data = await response.json();
 
-            console.log("Query results received:", data); // Debug log
-
+            // Enhanced error handling
             if (data.error) {
-                resultsDiv.innerHTML = `<p class="error">${data.error}</p>`;
+                resultsDiv.innerHTML = `<div class="alert alert-danger">
+                <strong>Error:</strong> ${data.error}
+                ${data.details ? `<br>Details: ${data.details}` : ''}
+            </div>`;
             } else {
                 resultsDiv.innerHTML = formatResults(data.results);
             }
         } catch (error) {
-            resultsDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            resultsDiv.innerHTML = `<div class="alert alert-danger">
+            <strong>Network Error:</strong> ${error.message}
+        </div>`;
+            console.error("Execution error:", error);
         }
     });
 
-    // Function to format results into an HTML table
+    // Function to format results
     function formatResults(results) {
-        if (results.length === 0) {
-            return "<p>No results found.</p>";
-        }
+        if (results.length === 0) return "<p>No results found.</p>";
 
         let table = "<table><thead><tr>";
         const headers = Object.keys(results[0]);
-        headers.forEach((header) => {
-            table += `<th>${header}</th>`;
-        });
+        headers.forEach(header => table += `<th>${header}</th>`);
         table += "</tr></thead><tbody>";
 
-        results.forEach((row) => {
+        results.forEach(row => {
             table += "<tr>";
-            headers.forEach((header) => {
-                table += `<td>${row[header]?.value || ""}</td>`;
-            });
+            headers.forEach(header => table += `<td>${row[header]?.value || ""}</td>`);
             table += "</tr>";
         });
 
-        table += "</tbody></table>";
-        return table;
+        return table + "</tbody></table>";
     }
-});
 
-document.addEventListener('DOMContentLoaded', async () => {
-  
- 
-    const response = await fetch('/previous-queries');
-    const queries = await response.json();
-    const previousQueriesDiv = document.getElementById('previous-queries');
-    queries.forEach(query => {
-        const queryElement = document.createElement('a');
-        queryElement.href = '#';
-        queryElement.className = 'list-group-item list-group-item-action';
-        queryElement.textContent = query;
-        previousQueriesDiv.appendChild(queryElement);
-    });
+    // Load previous queries
+    (async () => {
+        try {
+            const response = await fetch('/previous-queries');
+            const queries = await response.json();
+            const previousQueriesDiv = document.getElementById('previous-queries');
+
+            queries.forEach(query => {
+                const queryElement = document.createElement('a');
+                queryElement.href = '#';
+                queryElement.className = 'list-group-item list-group-item-action';
+                queryElement.textContent = query;
+
+                // Add click handler to populate editor
+                queryElement.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    editor.setValue(query);
+                });
+
+                previousQueriesDiv.appendChild(queryElement);
+            });
+        } catch (error) {
+            console.error('Error loading previous queries:', error);
+        }
+    })();
 });

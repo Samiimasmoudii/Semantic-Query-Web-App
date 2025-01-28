@@ -113,16 +113,30 @@ def dashboard():
 
 @main.route('/query', methods=['POST'])
 def query():
-    query = request.form.get('sparql_query')
-    if not query:
-        return jsonify({"error": "Query cannot be empty"}), 400
-    save_query(query)
-    results = execute_sparql_query(query)
-    if "error" in results:
-        return jsonify({"error": results["error"]}), 400
+    raw_query = request.form.get('sparql_query', '').strip()
+    if not raw_query:
+        return jsonify({"error": "Empty query"}), 400
 
-    return jsonify({"results": results})
-@main.route('/previous-queries', methods=['GET'])
+    try:
+        # Save query history
+        save_query(raw_query)
+        
+        # Execute the query
+        results = execute_sparql_query(raw_query)
+        
+        if "error" in results:
+            return jsonify({
+                "error": results["error"],
+                "query_sent": raw_query  # For debugging
+            }), 400
+            
+        return jsonify({"results": results})
+        
+    except Exception as e:
+        return jsonify({
+            "error": "Server error",
+            "details": str(e)
+        }), 500
 def get_previous_queries():
     queries = []
     file_path = os.path.join(os.path.dirname(__file__), 'static', 'sparql_queries.txt')
