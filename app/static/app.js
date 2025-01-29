@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', function () {
     const suggestionsDiv = document.getElementById('suggestions');
     const executeBtn = document.getElementById('execute-btn');
+    const resultsDiv = document.getElementById('results');
+    const previousQueriesDiv = document.getElementById('previous-queries');
     let typingTimer;
 
     // Initialize CodeMirror
@@ -10,7 +12,6 @@ document.addEventListener('DOMContentLoaded', function () {
         theme: "default",
         matchBrackets: true,
     });
-
 
     console.log("CodeMirror initialized."); // Debug log
 
@@ -82,10 +83,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 100);
     });
 
+    // Execute button click event
     executeBtn.addEventListener('click', async function () {
         const query = editor.getValue();
-        const resultsDiv = document.getElementById('results');
-
         console.log("Executing query:", query); // Debug log
 
         try {
@@ -118,65 +118,109 @@ document.addEventListener('DOMContentLoaded', function () {
             resultsDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
         }
     });
+
+    // Format results for display
     function formatResults(data) {
-        // Check if the API response has the expected structure
         if (!data.results || !data.results.bindings) {
             console.error("Invalid response format:", data);
             return "<p>Error: Unexpected response format.</p>";
         }
-    
+
         let bindings = data.results.bindings;
-    
+
         if (bindings.length === 0) {
             return "<p>No results found.</p>";
         }
-    
-        let table = "<table style='border-collapse: collapse; width: 100%; text-align: left;' border='1'>";
+
+        let table = "<table id='results-table' style='border-collapse: collapse; width: 100%; text-align: left;' border='1'>";
         table += "<thead><tr>";
-    
+
         // Extract headers dynamically
         const headers = Object.keys(bindings[0]);
         headers.forEach((header) => {
             table += `<th style="padding: 8px; background-color: #f2f2f2;">${header}</th>`;
         });
-    
+
         table += "</tr></thead><tbody>";
-    
+
         // Populate table rows
         bindings.forEach((row) => {
             table += "<tr>";
             headers.forEach((header) => {
                 let value = row[header]?.value || "";
-                // Remove links by extracting the last part of the URI
                 if (value.startsWith("http://") || value.startsWith("https://")) {
-                    value = value.split("/").pop().replace(/_/g, " "); // Keep only the readable part
+                    value = value.split("/").pop().replace(/_/g, " ");
                 }
                 table += `<td style="padding: 8px;">${value}</td>`;
             });
             table += "</tr>";
         });
-    
+
         table += "</tbody></table>";
+
+        // Add the download PDF button
+        table += '<button id="download-pdf" class="btn btn-primary mt-3">Download PDF</button>';
+        setTimeout(() => bindPDFDownload(), 100); // Ensure the button exists before binding
+
         return table;
     }
-    
-});
-document.getElementById('logout-btn').addEventListener('click', function() {
-    // Redirect to logout route or perform logout action
-    window.location.href = '/logout'; // Example redirect
-});
 
-document.addEventListener('DOMContentLoaded', async () => {
+    // Add event listener for PDF download
+    const downloadButton = document.getElementById('download-pdf');
+    if (downloadButton) {
+        downloadButton.addEventListener('click', function () {
+            const { jsPDF } = window.jspdf;
 
+            const doc = new jsPDF();
+            doc.autoTable({ html: '#results table' });
+            doc.save('query-results.pdf');
+        });
+    }
 
-    const response = await fetch('/previous-queries');
-    const queries = await response.json();
-    const previousQueriesDiv = document.getElementById('previous-queries');
-    queries.forEach(query => {
-        const queryElement = document.createElement('a');
-        queryElement.href = '#';
-        queryElement.className = 'list-group-item list-group-item-action';
-        queryElement.textContent = query;
-        previousQueriesDiv.appendChild(queryElement);
+    // Logout button event
+    document.getElementById('logout-btn').addEventListener('click', function () {
+        window.location.href = '/logout';
     });
+
+    // Fetch and display previous queries
+    (async () => {
+        const response = await fetch('/previous-queries');
+        const queries = await response.json();
+        queries.forEach(query => {
+            const queryElement = document.createElement('a');
+            queryElement.href = '#';
+            queryElement.className = 'list-group-item list-group-item-action';
+            queryElement.textContent = query;
+            previousQueriesDiv.appendChild(queryElement);
+        });
+    })();
+
+    function bindPDFDownload() {
+        setTimeout(() => {
+            const downloadButton = document.getElementById('download-pdf');
+            const resultsTable = document.getElementById('results-table');
+    
+            if (!downloadButton || !resultsTable) {
+                console.error("Download button or results table not found!");
+                return;
+            }
+    
+            downloadButton.addEventListener('click', function () {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+    
+                // Convert table to PDF, auto-adjusting columns
+                doc.autoTable({
+                    html: '#results-table',
+                    theme: 'striped',
+                    styles: { fontSize: 8, cellWidth: 'auto' }, // Fit content properly
+                    margin: { top: 10, left: 10, right: 10 }, // Add margins
+                    columnStyles: { 0: { cellWidth: 'wrap' } } // Wrap text if needed
+                });
+    
+                doc.save('query-results.pdf');
+            });
+        }, 500); // Small delay to ensure table and button exist
+    }
+    
 });
