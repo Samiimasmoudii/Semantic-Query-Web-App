@@ -45,7 +45,7 @@ try:
     # Push Remaining Queries
     if actions:
         es_helpers.bulk(es_client, actions)
-        print(f"Pushed remaining {len(actions)} queries")
+        print(f"Pushed remaining {len(actions)} queries")                                              
 
     # Print total documents indexed
     print(f"Total documents indexed: {es_client.count(index=es_index)['count']}")

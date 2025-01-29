@@ -8,8 +8,8 @@ textarea {
 }
 
 .suggestions {
-    color: #6c757d;
-    font-size: 0.9rem;
+    color: #000000;
+    font-size: 1rem;
 }
 
 #results pre {
@@ -30,4 +30,15 @@ textarea {
 
 .cm-atom {
     color: #008000;
+}
+.banner {
+    background-color: #f8f9fa;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #ddd;
+}
+.banner h3 {
+    margin: 0;
 }

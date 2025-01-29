@@ -1,29 +1,25 @@
 import os
 from SPARQLWrapper import SPARQLWrapper, JSON
+import requests
+
+from SPARQLWrapper import SPARQLWrapper, JSON
+from urllib.parse import quote_plus
+import requests
 
 def execute_sparql_query(query):
-    endpoint_url = "https://dbpedia.org/sparql"
-    sparql = SPARQLWrapper(endpoint_url)
-    
     try:
-        # Add required prefixes if missing
-        if "PREFIX dbo:" not in query:
-            query = "PREFIX dbo: <http://dbpedia.org/ontology/>\n" + query
-        if "PREFIX dbr:" not in query:
-            query = "PREFIX dbr: <http://dbpedia.org/resource/>\n" + query
+        print("Executing SPARQL Query:", query)  # Debugging
+        response = requests.get(
+            "https://dbpedia.org/sparql",
+            params={"query": query, "format": "json"},
+            timeout=5
+        )
+        response.raise_for_status()  # Raise error if request fails
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"SPARQL request failed: {str(e)}")  # Debugging
+        return {"error": f"SPARQL request failed: {str(e)}"}
 
-        sparql.setQuery(query)
-        sparql.setReturnFormat(JSON)
-        
-        # Set timeout and user agent
-        sparql.setTimeout(30)
-        sparql.addCustomParameter("User-Agent", "YourApp/1.0 (your@email.com)")
-        
-        results = sparql.query().convert()
-        return results["results"]["bindings"]
-        
-    except Exception as e:
-        return {"error": f"SPARQL Execution Error: {str(e)}"}
 
 def save_query(query):
     file_path = os.path.join(os.path.dirname(__file__), '../static/sparql_queries.txt')

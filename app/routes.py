@@ -1,27 +1,17 @@
 import os
-
-from flask import render_template, request, redirect, url_for, flash
-from werkzeug.security import generate_password_hash
-from sqlalchemy.orm import Session
-from flask_wtf import FlaskForm
-from .database import SessionLocal  # Import SessionLocal
-
-from flask import render_template, request, redirect, url_for, flash
-from werkzeug.security import generate_password_hash
-from sqlalchemy.orm import Session
-from . import db
-from app.models.user import User
-from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField
-from wtforms.validators import DataRequired, Length, EqualTo
-from . import db
-from flask import Blueprint, redirect, render_template, request, jsonify, url_for, session
-from app.controllers.es_pull_scroll import es_search
-from .controllers.sparql_utils import execute_sparql_query , save_query
-from wtforms.validators import DataRequired, Length
+from flask import (
+    Blueprint, render_template, request, redirect, url_for, flash, jsonify, session
+)
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy.orm import Session
+from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField
-from app.database import engine, get_db, Base
+from wtforms.validators import DataRequired, Length
+from .database import engine, SessionLocal, Base
+from app.models.user import User
+from app.controllers.es_pull_scroll import es_search
+from .controllers.sparql_utils import execute_sparql_query, save_query
+
 main = Blueprint('main', __name__)
 
 @main.route('/')
@@ -108,35 +98,29 @@ def signup():
 def dashboard():
     if 'user' not in session:
         return redirect(url_for('main.login'))
-    return render_template('index.html')
+    username = session.get('user')
+    return render_template('index.html', username=username)
+    
+    
+    
+
 
 
 @main.route('/query', methods=['POST'])
 def query():
-    raw_query = request.form.get('sparql_query', '').strip()
-    if not raw_query:
-        return jsonify({"error": "Empty query"}), 400
+    query = request.form.get('sparql_query')
+    if not query:
+        return jsonify({"error": "Query cannot be empty"}), 400
+    save_query(query)
+    results = execute_sparql_query(query)
+    if "error" in results:
+        return jsonify({"error": results["error"]}), 400
 
-    try:
-        # Save query history
-        save_query(raw_query)
-        
-        # Execute the query
-        results = execute_sparql_query(raw_query)
-        
-        if "error" in results:
-            return jsonify({
-                "error": results["error"],
-                "query_sent": raw_query  # For debugging
-            }), 400
-            
-        return jsonify({"results": results})
-        
-    except Exception as e:
-        return jsonify({
-            "error": "Server error",
-            "details": str(e)
-        }), 500
+    return jsonify({"results": results})
+
+
+
+@main.route('/previous-queries', methods=['GET'])
 def get_previous_queries():
     queries = []
     file_path = os.path.join(os.path.dirname(__file__), 'static', 'sparql_queries.txt')

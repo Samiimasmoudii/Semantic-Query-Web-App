@@ -17,6 +17,10 @@
 </head>
 
 <body>
+    <div class="banner">
+        <h3>Hello, {{ username }}</h3>
+        <button id="logout-btn" class="btn btn-danger">Logout</button>
+    </div>
     <div class="container mt-5">
         <div class="row">
             <!-- Left side: SPARQL Query Assistant and Results -->
@@ -31,7 +35,7 @@
                 </div>
                 <div id="results" class="mt-4"></div>
             </div>
-            
+
             <!-- Right side: Previous Queries -->
             <div class="col-lg-4">
                 <h2 class="text-center mb-3">Previous Queries</h2>
@@ -41,7 +45,7 @@
             </div>
         </div>
     </div>
-    
+
 
 
 
