@@ -213,3 +213,25 @@ SELECT ?city WHERE {
 }
 # Simple SELECT
 SELECT ?capital WHERE { dbr:United_States dbo:capital ?capital }
+# Simple SELECT
+SELECT ?capital WHERE { dbr:United_States dbo:capital ?capital }
+# Queries with ORDER BY
+SELECT ?city ?population WHERE {
+  ?city a dbo:City ;
+        dbo:populationTotal ?population .
+} ORDER BY DESC(?population)
+# Queries with ORDER BY
+SELECT ?city ?population WHERE {
+  ?city a dbo:City ;
+        dbo:populationTotal ?population .
+} ORDER BY DESC(?population)
+# Queries with ORDER BY
+SELECT ?city ?population WHERE {
+  ?city a dbo:City ;
+        dbo:populationTotal ?population .
+} ORDER BY DESC(?population)
+# Queries with ORDER BY
+SELECT ?city ?population WHERE {
+  ?city a dbo:City ;
+        dbo:populationTotal ?population .
+} ORDER BY DESC(?population)

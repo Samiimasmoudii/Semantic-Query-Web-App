@@ -1,69 +1,96 @@
-## Install Python and set up  virtual environment 
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate  # Windows
-pip install flask rdflib sparqlwrapper
+# Semantic Web Application
 
+## Overview
+This project is a web-based application that allows users to construct and execute SPARQL queries on DBpedia. It provides a user-friendly interface for exploring linked data, with features like query suggestions powered by Elasticsearch, a custom query builder, and visualization options for query results.
 
-## Compose docker image 
+## Features
+- **User Authentication**: Secure signup and login with password hashing.
+- **SPARQL Query Execution**: Users can run SPARQL queries on DBpedia.
+- **Elasticsearch Integration**: Suggests queries as users type.
+- **Query Visualization**: Displays results in tables.
+- **Query History Management**: Save and export queries in CSV or JSON.
+- **Security**: Protection against SPARQL injection, CSRF, and secure password handling.
 
-docker-compose up -d 
+## Tech Stack
+- **Backend**: Flask (Python)
+- **Frontend**: JavaScript, Bootstrap
+- **Database**: MySQL (Dockerized)
+- **Search Engine**: Elasticsearch (Dockerized)
+- **SPARQL Endpoint**: DBpedia
+- **Containerization**: Docker Compose
 
-to test the connection from your local machine to teh docker image :  curl http://localhost:9200
+## Project Structure
+```
+semantic-web-app/
+│
+├── app/
+│   ├── templates/          # HTML files
+│   ├── static/             # CSS, JavaScript
+│   ├── controllers/        # elastic Searc, Sparql Utils
+│   ├── models/             # models
+│   ├── __init__.py         # Flask app initialization
+│   ├── routes.py           # Define routes and business logic
+│   ├── sparql_utils.py     # SPARQL query functions
+│   ├── database.py         # Database utilities 
+│   └── config.py               # Configuration settings
+│
+├── tests/                  # Unit and integration tests
+├── Docker/
+    └── docker-compose.yml      
+│
+├── 
+├── run.py                  # Main script to run the Flask app
+├── requirements.txt        # Dependencies
+    
+```
 
-or 
-pip install requests
-python test_es.py
+## Setup & Installation
+### Prerequisites
+- Docker & Docker Compose
+- Python 3.8+
+- Node.js (optional for frontend enhancements)
 
-If the server is running correctly you can try creating an index and adding some data 
-# PowerShell commands (if  you're using Windows)
+### Steps
+1. Clone the repository:
+   ```sh
+   git clone https://github.com/your-repo/semantic-web-app.git
+   cd semantic-web-app
+   ```
+2. Build and start the services:
+   ```sh
+   docker-compose up -d
+   ```
+3. Install Python dependencies:
+   ```sh
+   pip install -r requirements.txt
+   ```
+4. Run the Flask app:
+   ```sh
+   python run.py
+   ```
+5. Open `http://localhost:5000` in your browser.
 
-# Create an index
-Invoke-RestMethod -Method PUT -Uri "http://localhost:9200/test_index"
+## API Endpoints
+| Method | Endpoint           | Description                  |
+|--------|-------------------|------------------------------|
+| GET    | `/`               | Home page                    |
+| POST   | `/login`          | User authentication          |
+| POST   | `/signup`         | User registration            |
+| GET    | `/query`          | Run SPARQL query             |
+| GET    | `/history`        | Retrieve saved queries       |
 
-# Add a document
-$body = @{
-    "title" = "Test Document"
-    "content" = "Hello World"
-} | ConvertTo-Json
+## Security Considerations
+- Uses **password hashing** for secure storage.
+- Implements **CSRF protection** in forms.
+- Prevents **SPARQL injection** through proper query sanitization.
 
-Invoke-RestMethod -Method POST -Uri "http://localhost:9200/test_index/_doc" -Body $body -ContentType "application/json"
-# Retrieve the document you just created:
+## Future Enhancements
+- Advanced query visualizations (graphs, timelines,maps)
+- OAuth-based login (Google, GitHub)
+- Multi-user collaboration for queries
 
-Invoke-RestMethod -Method GET -Uri "http://localhost:9200/test_index/_doc/sEKwB5QBb6fV7ijn4281"
+## License
 
-# Search all documents in the index:
+---
+**Author:** Sami MASMOUDI
 
-
-Invoke-RestMethod -Method GET -Uri "http://localhost:9200/test_index/_search" -ContentType "application/json"
-
-
-# Add another document with specific search terms:
-
-
-$body = @{
-    "title" = "Another Document"
-    "content" = "This is searchable content"
-    "tags" = @("test", "example")
-} | ConvertTo-Json
-
-Invoke-RestMethod -Method POST -Uri "http://localhost:9200/test_index/_doc" -Body $body -ContentType "application/json"
-
-# Perform a search query:
-$searchBody = @{
-    "query" = @{
-        "match" = @{
-            "content" = "searchable"
-        }
-    }
-} | ConvertTo-Json
-
-Invoke-RestMethod -Method GET -Uri "http://localhost:9200/test_index/_search" -Body $searchBody -ContentType "application/json"
-
-# Get index statistics:
-Invoke-RestMethod -Method GET -Uri "http://localhost:9200/test_index/_stats"
-
-
-# Check how many documents are in the index:
-
-Invoke-RestMethod -Method GET -Uri "http://localhost:9200/test_index/_count"
